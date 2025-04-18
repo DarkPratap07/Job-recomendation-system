@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Job Recommendations</title>
+    <link rel="stylesheet" href="/static/result.css">
+   
+</head>
+<body>
+  <h2>Extracted Skills from Resume</h2>
+  <ul>
+      {% for skill in skills %}
+          <li>{{ skill }}</li>
+      {% endfor %}
+  </ul>
+
+  <h2>Recommended Jobs</h2>
+  <table>
+      <tr>
+          <th>Industry</th>
+          <th>Location</th>
+          <th>Required Skills</th>
+      </tr>
+      {% for index, job in jobs.iterrows() %}
+      <tr>
+          <td>{{ job.industry }}</td>
+          <td>{{ job.location }}</td>
+          <td>{{ job.skills }}</td>
+      </tr>
+      {% endfor %}
+  </table>
+
+  <h2>Job Locations Map</h2>
+  <div class="map-container">
+    {{ folium_map|safe }}
+  </div>
+  
+</body>
+</html>
