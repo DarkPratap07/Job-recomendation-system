@@ -10,15 +10,17 @@ from geopy.geocoders import Nominatim
 
 app = Flask(__name__)
 
-# ===========================
+
 # Resume Parser Functionality
-# ===========================
+
 def extract_text_from_pdf(pdf_file):
     reader = PyPDF2.PdfReader(pdf_file)
     text = ''
     for page in reader.pages:
         text += page.extract_text()
     return text
+
+import re
 
 def extract_skills(text):
     skills_list = [
@@ -27,12 +29,20 @@ def extract_skills(text):
         "cloud", "aws", "azure", "linux", "javascript", "html", "css", "r", "git", "github"
     ]
     text = text.lower()
-    extracted = [skill for skill in skills_list if skill in text]
+    extracted = []
+
+    for skill in skills_list:
+        # Escape any special characters in the skill (like "c++" or "node.js")
+        pattern = r'\b' + re.escape(skill) + r'\b'
+        if re.search(pattern, text):
+            extracted.append(skill)
+
     return extracted
 
-# ===========================
+
+
 # Job Matcher Functionality
-# ===========================
+
 def get_matching_jobs(resume_text):
     jobs = pd.read_csv("jobs.csv")
     vectorizer = TfidfVectorizer(stop_words="english")
@@ -43,9 +53,9 @@ def get_matching_jobs(resume_text):
     matched_jobs = jobs[jobs["similarity"] > 0].sort_values(by="similarity", ascending=False).head(5)
     return matched_jobs
 
-# ===========================
+
 # Folium Map Generator
-# ===========================
+
 def generate_map(matched_jobs):
     geolocator = Nominatim(user_agent="job_recommendation_app")
     latitudes, longitudes = [], []
@@ -87,9 +97,9 @@ def generate_map(matched_jobs):
     return job_map._repr_html_()
 
 
-# ===========================
+
 # Flask Routes
-# ===========================
+
 @app.route("/")
 def index():
     return render_template("index.html")
