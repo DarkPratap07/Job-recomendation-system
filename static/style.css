@@ -67,6 +67,7 @@ input[type="file"] {
 .upload-btn:hover {
     background-color: #27ae60;
 }
+
 .file-name {
     display: block;
     margin-bottom: 20px;
@@ -74,6 +75,35 @@ input[type="file"] {
     font-size: 14px;
 }
 
+.input-group {
+    margin: 20px auto;
+    width: 100%;
+    max-width: 300px;  /* Adjusted to control the size */
+    text-align: left;  /* Aligning the text to the left */
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #2c3e50;
+    font-size: 16px;
+}
+
+.input-group input[type="number"] {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.input-group input[type="number"]:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+    outline: none;
+}
 
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-20px); }
@@ -89,5 +119,14 @@ input[type="file"] {
 
     .title {
         font-size: 2rem;
+    }
+
+    .input-group {
+        max-width: 100%;
+    }
+
+    .input-group input[type="number"] {
+        font-size: 14px;
+        padding: 8px 12px;
     }
 }
