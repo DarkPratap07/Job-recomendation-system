@@ -11,7 +11,6 @@ import time
 
 app = Flask(__name__)
 
-
 # Resume Parser Functionality
 
 def extract_text_from_pdf(pdf_file):
@@ -20,8 +19,6 @@ def extract_text_from_pdf(pdf_file):
     for page in reader.pages:
         text += page.extract_text()
     return text
-
-import re
 
 def extract_skills(text):
     skills_list = [
@@ -33,37 +30,33 @@ def extract_skills(text):
     extracted = []
 
     for skill in skills_list:
-        # Escape any special characters in the skill (like "c++" or "node.js")
         pattern = r'\b' + re.escape(skill) + r'\b'
         if re.search(pattern, text):
             extracted.append(skill)
 
     return extracted
 
+# Job Matcher Functionality — Top N Unique Companies
 
-
-# Job Matcher Functionality
-
-def get_matching_jobs(resume_text):
+def get_matching_jobs(resume_text, top_n=5):
     jobs = pd.read_csv("jobs.csv")
     vectorizer = TfidfVectorizer(stop_words="english")
     job_vectors = vectorizer.fit_transform(jobs["industry"].fillna(""))
     resume_vector = vectorizer.transform([resume_text])
     similarity_scores = cosine_similarity(resume_vector, job_vectors).flatten()
     jobs["similarity"] = similarity_scores
-    matched_jobs = jobs[jobs["similarity"] > 0].sort_values(by="similarity", ascending=False).head(5)
-    return matched_jobs
 
+    jobs_sorted = jobs[jobs["similarity"] > 0].sort_values(by="similarity", ascending=False)
+    unique_companies = jobs_sorted.drop_duplicates(subset=["company"]).head(top_n)
 
-# Folium Map Generator
+    return unique_companies
 
-import time
+# Folium Map Generator with Cache + Delay
 
 def generate_map(matched_jobs):
     geolocator = Nominatim(user_agent="job_recommendation_app")
     latitudes, longitudes = [], []
-
-    geocode_cache = {}  # cache for storing previous location results
+    geocode_cache = {}
 
     for location in matched_jobs["location"]:
         if location in geocode_cache:
@@ -72,7 +65,7 @@ def generate_map(matched_jobs):
             try:
                 geo_location = geolocator.geocode(location)
                 geocode_cache[location] = geo_location
-                time.sleep(1)  # delay to respect rate limit
+                time.sleep(1)  # Respect rate limits
             except Exception as e:
                 print(f"Geocoding error for '{location}': {e}")
                 geo_location = None
@@ -88,10 +81,8 @@ def generate_map(matched_jobs):
     matched_jobs["latitude"] = latitudes
     matched_jobs["longitude"] = longitudes
 
-    # Create folium map centered on India
     job_map = folium.Map(location=[20.5937, 78.9629], zoom_start=5, tiles="CartoDB positron")
 
-    # Add job markers to the map
     for _, row in matched_jobs.dropna(subset=["latitude", "longitude"]).iterrows():
         popup_html = f"""
             <strong>{row['job_title']}</strong><br>
@@ -106,9 +97,6 @@ def generate_map(matched_jobs):
 
     return job_map._repr_html_()
 
-
-
-
 # Flask Routes
 
 @app.route("/")
@@ -118,12 +106,15 @@ def index():
 @app.route("/upload", methods=["POST"])
 def upload_resume():
     uploaded_file = request.files["resume"]
+    top_n = int(request.form.get("top_n", 5))  # Get from form input
+
     if uploaded_file and uploaded_file.filename.endswith(".pdf"):
         resume_text = extract_text_from_pdf(uploaded_file)
         extracted_skills = extract_skills(resume_text)
-        matching_jobs = get_matching_jobs(resume_text)
+        matching_jobs = get_matching_jobs(resume_text, top_n=top_n)
         folium_map_html = generate_map(matching_jobs)
         return render_template("results.html", skills=extracted_skills, jobs=matching_jobs, folium_map=folium_map_html)
+    
     return "Please upload a valid PDF file."
 
 if __name__ == "__main__":

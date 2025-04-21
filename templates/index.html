@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -17,6 +17,51 @@
                     Choose File
                 </label>
                 <span id="file-name" class="file-name">No file chosen</span>
+                <button type="submit" class="upload-btn">Get Recommendations</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const resumeInput = document.getElementById('resume');
+        const fileNameDisplay = document.getElementById('file-name');
+
+        resumeInput.addEventListener('change', function () {
+            const fileName = this.files[0] ? this.files[0].name : 'No file chosen';
+            fileNameDisplay.textContent = fileName;
+        });
+    </script>
+</body>
+</html> -->
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Job Recommendation System</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">Job Recommendation System</h1>
+
+        <div class="card">
+            <h2>Upload Your Resume</h2>
+            <form action="/upload" method="post" enctype="multipart/form-data">
+                
+                <label for="resume" class="upload-label">
+                    <input type="file" name="resume" id="resume" required>
+                    Choose File
+                </label>
+                <span id="file-name" class="file-name">No file chosen</span>
+
+                <!-- New Input for Top N Companies -->
+                <div class="input-group">
+                    <label for="top_n">Number of Top Companies:</label>
+                    <input type="number" name="top_n" id="top_n" value="5" min="1" max="20" required>
+                </div>
+
                 <button type="submit" class="upload-btn">Get Recommendations</button>
             </form>
         </div>
