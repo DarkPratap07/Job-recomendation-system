@@ -7,6 +7,7 @@ import PyPDF2
 import re
 import folium
 from geopy.geocoders import Nominatim
+import time
 
 app = Flask(__name__)
 
@@ -56,22 +57,31 @@ def get_matching_jobs(resume_text):
 
 # Folium Map Generator
 
+import time
+
 def generate_map(matched_jobs):
     geolocator = Nominatim(user_agent="job_recommendation_app")
     latitudes, longitudes = [], []
 
-    # Geocode each job location
+    geocode_cache = {}  # cache for storing previous location results
+
     for location in matched_jobs["location"]:
-        try:
-            geo_location = geolocator.geocode(location)
-            if geo_location:
-                latitudes.append(geo_location.latitude)
-                longitudes.append(geo_location.longitude)
-            else:
-                latitudes.append(None)
-                longitudes.append(None)
-        except Exception as e:
-            print(f"Geocoding error: {e}")
+        if location in geocode_cache:
+            geo_location = geocode_cache[location]
+        else:
+            try:
+                geo_location = geolocator.geocode(location)
+                geocode_cache[location] = geo_location
+                time.sleep(1)  # delay to respect rate limit
+            except Exception as e:
+                print(f"Geocoding error for '{location}': {e}")
+                geo_location = None
+                geocode_cache[location] = None
+
+        if geo_location:
+            latitudes.append(geo_location.latitude)
+            longitudes.append(geo_location.longitude)
+        else:
             latitudes.append(None)
             longitudes.append(None)
 
@@ -95,6 +105,7 @@ def generate_map(matched_jobs):
         ).add_to(job_map)
 
     return job_map._repr_html_()
+
 
 
 
